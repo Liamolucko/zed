@@ -234,6 +234,29 @@ impl PlatformInput {
                     modifiers: read_modifiers(native_event),
                 })
             }),
+            NSEventType::NSEventTypeSwipe => {
+                let direction = if native_event.deltaX() == 1.0 {
+                    Some(NavigationDirection::Back)
+                } else if native_event.deltaX() == -1.0 {
+                    Some(NavigationDirection::Forward)
+                } else {
+                    None
+                };
+
+                direction.and_then(|direction| {
+                    window_height.map(|window_height| {
+                        Self::MouseDown(MouseDownEvent {
+                            button: MouseButton::Navigate(direction),
+                            position: point(
+                                px(native_event.locationInWindow().x as f32),
+                                window_height - px(native_event.locationInWindow().y as f32),
+                            ),
+                            modifiers: read_modifiers(native_event),
+                            click_count: 1,
+                        })
+                    })
+                })
+            }
             _ => None,
         }
     }
